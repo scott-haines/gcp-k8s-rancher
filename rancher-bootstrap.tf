@@ -7,3 +7,23 @@ resource "rancher2_bootstrap" "admin" {
   password  = "${var.rancher-admin-password}"
   telemetry = false
 }
+
+resource "rancher2_cluster" "red" {
+  name        = "red"
+  description = "red cluster"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+}
+
+resource "rancher2_cluster" "black" {
+  name        = "black"
+  description = "black cluster"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+}
