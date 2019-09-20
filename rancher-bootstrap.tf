@@ -9,6 +9,10 @@ resource "rancher2_bootstrap" "admin" {
 }
 
 resource "rancher2_cluster" "red" {
+  depends_on = [
+    "rancher2_bootstrap.admin"
+  ]
+
   name        = "red"
   description = "red cluster"
   rke_config {
@@ -19,6 +23,10 @@ resource "rancher2_cluster" "red" {
 }
 
 resource "rancher2_cluster" "black" {
+  depends_on = [
+    "rancher2_bootstrap.admin"
+  ]
+
   name        = "black"
   description = "black cluster"
   rke_config {
