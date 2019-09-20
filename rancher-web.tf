@@ -77,17 +77,7 @@ resource "google_compute_instance" "rancher-web" {
         -e HTTP_PROXY="http://rancher-proxy-vm:3128" \
         -e HTTPS_PROXY="http://rancher-proxy-vm:3128" \
         -e NO_PROXY="localhost,127.0.0.1,0.0.0.0,10.0.0.0/8" \
-        -e CATTLE_SERVER_URL="${var.rancher-proxy-fqdn}" \
         rancher/rancher:latest --no-cacerts
-
-      while ! curl -k https://localhost/ping; do sleep 3; done
-
-      # Login
-      LOGINRESPONSE=`curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
-      LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
-
-      # Change password
-      curl -s 'https://127.0.0.1/v3/users?action=changepassword' -H 'content-type: application/json' -H "Authorization: Bearer $LOGINTOKEN" --data-binary '{"currentPassword":"admin","newPassword":"${var.rancher-admin-password}"}' --insecure
     EOF
     ]
   }

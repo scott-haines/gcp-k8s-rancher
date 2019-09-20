@@ -4,3 +4,14 @@ provider "google" {
   region      = "us-east1"
   zone        = "us-east1-b"
 }
+
+provider "rancher2" {
+  alias     = "bootstrap"
+  api_url   = "https://${var.rancher-proxy-fqdn}"
+  bootstrap = true
+}
+
+provider "rancher2" {
+  api_url   = "${var.rancher-proxy-fqdn}"
+  token_key = "${rancher2_bootstrap.admin.token}"
+}
