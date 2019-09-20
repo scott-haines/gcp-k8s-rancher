@@ -1,10 +1,11 @@
-resource "google_compute_instance" "rancher-web" {
-  name         = "rancher-vm"
+resource "google_compute_instance" "red-nodes" {
+  count        = 1
+  name         = "red-node-vm-${count.index}"
   machine_type = "f1-micro"
-  tags         = ["rancher-web"]
+  tags         = ["red-nodes"]
 
   depends_on = [
-    "google_compute_instance.rancher-proxy"
+    "rancher2_cluster.red"
   ]
 
   metadata = {
@@ -26,7 +27,7 @@ resource "google_compute_instance" "rancher-web" {
     user        = "${var.ssh-username}"
     agent       = "false"
     private_key = "${file("${var.ssh-private-key}")}"
-    host        = "${google_compute_instance.rancher-web.network_interface.0.network_ip}"
+    host        = "${element(google_compute_instance.red-nodes.*.network_interface.0.network_ip, count.index)}"
 
     bastion_host        = "${google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip}"
     bastion_private_key = "${file("${var.ssh-private-key}")}"
@@ -67,36 +68,7 @@ resource "google_compute_instance" "rancher-web" {
 
       sudo systemctl daemon-reload
       sudo systemctl restart docker
-
-      sudo docker run \
-        -d \
-        --name rancher-server \
-        --restart=unless-stopped \
-        -p 80:80 -p 443:443 \
-        -e HTTP_PROXY="http://rancher-proxy-vm:3128" \
-        -e HTTPS_PROXY="http://rancher-proxy-vm:3128" \
-        -e NO_PROXY="localhost,127.0.0.1,0.0.0.0,10.0.0.0/8" \
-        rancher/rancher:latest --no-cacerts
     EOF
-    ]
-  }
-
-  provisioner "remote-exec" {
-    # This is being executed on the *rancher-proxy* to restart nginx now that
-    #  upstream has availability
-    connection {
-      type        = "ssh"
-      user        = "${var.ssh-username}"
-      agent       = "false"
-      private_key = "${file("${var.ssh-private-key}")}"
-      host        = "${google_compute_instance.rancher-proxy.network_interface.0.network_ip}"
-
-      bastion_host        = "${google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip}"
-      bastion_private_key = "${file("${var.ssh-private-key}")}"
-    }
-
-    inline = [
-      "sudo systemctl restart nginx"
     ]
   }
 }
