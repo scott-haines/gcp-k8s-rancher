@@ -8,3 +8,5 @@ variable "dns-rancher-proxy-password" {}
 variable "ssh-username" {}
 variable "ssh-private-key" {}
 variable "rancher-admin-password" {}
+
+variable "red-node-count" {}

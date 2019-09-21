@@ -60,7 +60,9 @@ resource "google_compute_instance" "rancher-proxy" {
       "sudo systemctl restart squid"
     ]
   }
+}
 
+resource "null_resource" "update-dns-proxy" {
   provisioner "local-exec" {
     command = "curl -X POST 'https://${var.dns-rancher-proxy-username}:${var.dns-rancher-proxy-password}@domains.google.com/nic/update?hostname=${var.rancher-proxy-fqdn}&myip=${google_compute_instance.rancher-proxy.network_interface.0.access_config.0.nat_ip}&offline=no'"
   }

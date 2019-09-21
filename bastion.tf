@@ -29,10 +29,6 @@ resource "google_compute_instance" "bastion" {
     host        = "${google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip}"
   }
 
-  provisioner "local-exec" {
-    command = "curl -X POST 'https://${var.dns-k8s-bastion-username}:${var.dns-k8s-bastion-password}@domains.google.com/nic/update?hostname=${var.k8s-bastion-fqdn}&myip=${google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip}&offline=no'"
-  }
-
   provisioner "file" {
     source      = "${var.ssh-private-key}"
     destination = "~/.ssh/id_rsa"
@@ -40,6 +36,12 @@ resource "google_compute_instance" "bastion" {
 
   provisioner "remote-exec" {
     inline = ["chmod 600 ~/.ssh/id_rsa"]
+  }
+}
+
+resource "null_resource" "update-dns-bastion" {
+  provisioner "local-exec" {
+    command = "curl -X POST 'https://${var.dns-k8s-bastion-username}:${var.dns-k8s-bastion-password}@domains.google.com/nic/update?hostname=${var.k8s-bastion-fqdn}&myip=${google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip}&offline=no'"
   }
 
   provisioner "local-exec" {
