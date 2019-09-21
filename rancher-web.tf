@@ -77,6 +77,9 @@ resource "google_compute_instance" "rancher-web" {
         -e HTTPS_PROXY="http://rancher-proxy-vm:3128" \
         -e NO_PROXY="localhost,127.0.0.1,0.0.0.0,10.0.0.0/8" \
         rancher/rancher:latest --no-cacerts
+
+      # don't consider provisioning complete until ping pong
+      while ! curl -k https://localhost/ping; do sleep 8; done
     EOF
     ]
   }
