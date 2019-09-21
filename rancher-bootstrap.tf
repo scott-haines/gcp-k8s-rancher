@@ -1,4 +1,8 @@
 resource "null_resource" "wait-for-rancher" {
+  depends_on = [
+    "google_compute_instance.rancher-web"
+  ]
+
   provisioner "local-exec" {
     command = "while ! curl -k https://${var.rancher-proxy-fqdn}/ping; do sleep 8; done"
   }
@@ -6,7 +10,7 @@ resource "null_resource" "wait-for-rancher" {
 
 resource "rancher2_bootstrap" "admin" {
   depends_on = [
-    "null_resource.wait-form-rancher"
+    "null_resource.wait-for-rancher"
   ]
 
   provider  = "rancher2.bootstrap"
@@ -21,20 +25,6 @@ resource "rancher2_cluster" "red" {
 
   name        = "red"
   description = "red cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-  }
-}
-
-resource "rancher2_cluster" "black" {
-  depends_on = [
-    "rancher2_bootstrap.admin"
-  ]
-
-  name        = "black"
-  description = "black cluster"
   rke_config {
     network {
       plugin = "canal"

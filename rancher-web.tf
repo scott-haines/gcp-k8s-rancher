@@ -1,6 +1,6 @@
 resource "google_compute_instance" "rancher-web" {
   name         = "rancher-vm"
-  machine_type = "f1-micro"
+  machine_type = "g1-small"
   tags         = ["rancher-web"]
 
   depends_on = [

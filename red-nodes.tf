@@ -1,7 +1,7 @@
 resource "google_compute_instance" "red-nodes" {
   count        = 1
   name         = "red-node-vm-${count.index}"
-  machine_type = "f1-micro"
+  machine_type = "n1-standard-2"
   tags         = ["red-nodes"]
 
   depends_on = [
@@ -45,6 +45,7 @@ resource "google_compute_instance" "red-nodes" {
 
   provisioner "remote-exec" {
     inline = [<<EOF
+      sudo echo ${google_compute_instance.rancher-proxy.network_interface.0.network_ip} ${var.rancher-proxy-fqdn} | sudo tee -a /etc/hosts
       sudo mv apt-proxy.conf /etc/apt/apt.conf.d/proxy.conf
       sudo apt update
       sudo apt install -y \
@@ -68,6 +69,9 @@ resource "google_compute_instance" "red-nodes" {
 
       sudo systemctl daemon-reload
       sudo systemctl restart docker
+
+      ${rancher2_cluster.red.cluster_registration_token.0.node_command} \
+        --worker --etcd --controlplane
     EOF
     ]
   }
