@@ -1,6 +1,12 @@
+resource "null_resource" "wait-for-rancher" {
+  provisioner "local-exec" {
+    command = "while ! curl -k https://${var.rancher-proxy-fqdn}/ping; do sleep 8; done"
+  }
+}
+
 resource "rancher2_bootstrap" "admin" {
   depends_on = [
-    "google_compute_instance.rancher-web"
+    "null_resource.wait-form-rancher"
   ]
 
   provider  = "rancher2.bootstrap"
