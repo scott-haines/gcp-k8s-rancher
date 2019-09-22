@@ -28,3 +28,7 @@ resource "rancher2_cluster" "red" {
     }
   }
 }
+
+output "kube_config" {
+  value = "${rancher2_cluster.red.kube_config}"
+}
