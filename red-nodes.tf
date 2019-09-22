@@ -20,6 +20,10 @@ resource "google_compute_instance" "red-nodes" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.vpc-subnet.name}"
+
+    access_config {
+      // this section is included to give external IP
+    }
   }
 
   connection {
@@ -78,7 +82,8 @@ resource "null_resource" "register-red-nodes" {
   count = "${var.red-node-count}"
 
   depends_on = [
-    "google_compute_instance.red-nodes"
+    "google_compute_instance.red-nodes",
+    "rancher2_cluster.red"
   ]
 
   connection {
@@ -98,5 +103,24 @@ resource "null_resource" "register-red-nodes" {
         --worker --etcd --controlplane
     EOF
     ]
+  }
+}
+
+resource "null_resource" "update-dns-red" {
+  # only run this once and point DNS to the first red node
+  #  not ideal - but works.
+
+  depends_on = [
+    "null_resource.register-red-nodes"
+  ]
+
+  provisioner "local-exec" {
+    command = "curl -X POST 'https://${var.dns-ingress-username}:${var.dns-ingress-password}@domains.google.com/nic/update?hostname=${var.ingress-fqdn}&myip=${google_compute_instance.red-nodes.0.network_interface.0.access_config.0.nat_ip}&offline=no'"
+  }
+
+  provisioner "local-exec" {
+    when       = "destroy"
+    command    = "curl -X POST 'https://${var.dns-ingress-username}:${var.dns-ingress-password}@domains.google.com/nic/update?hostname=${var.ingress-fqdn}&offline=yes'"
+    on_failure = "continue"
   }
 }

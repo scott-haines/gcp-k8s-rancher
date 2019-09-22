@@ -2,7 +2,8 @@ resource "rancher2_bootstrap" "admin" {
   depends_on = [
     "google_compute_firewall.allow-web-from-anywhere-to-rancher-proxy",
     "google_compute_instance.rancher-web",
-    "google_compute_instance.rancher-proxy"
+    "google_compute_instance.rancher-proxy",
+    "null_resource.update-dns-proxy"
   ]
 
   provider  = "rancher2.bootstrap"
@@ -12,7 +13,11 @@ resource "rancher2_bootstrap" "admin" {
 
 resource "rancher2_cluster" "red" {
   depends_on = [
-    "rancher2_bootstrap.admin"
+    "rancher2_bootstrap.admin",
+    "google_compute_firewall.allow-web-from-anywhere-to-rancher-proxy",
+    "google_compute_instance.rancher-web",
+    "google_compute_instance.rancher-proxy",
+    "null_resource.update-dns-proxy"
   ]
 
   name        = "red"

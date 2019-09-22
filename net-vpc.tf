@@ -53,3 +53,18 @@ resource "google_compute_firewall" "allow-web-from-anywhere-to-rancher-proxy" {
 
   target_tags = ["rancher-proxy"]
 }
+
+resource "google_compute_firewall" "allow-web-from-anywhere-to-red-nodes" {
+  name    = "allow-web-red-nodes"
+  network = "${google_compute_network.vpc.name}"
+
+  allow {
+    protocol = "tcp"
+    ports = [
+      "80",
+      "443"
+    ]
+  }
+
+  target_tags = ["red-nodes"]
+}
