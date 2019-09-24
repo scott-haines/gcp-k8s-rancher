@@ -15,3 +15,5 @@ provider "rancher2" {
   api_url   = "${rancher2_bootstrap.admin.url}"
   token_key = "${rancher2_bootstrap.admin.token}"
 }
+
+provider "kubernetes" {}

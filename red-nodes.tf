@@ -124,3 +124,35 @@ resource "null_resource" "update-dns-red" {
     on_failure = "continue"
   }
 }
+
+resource "null_resource" "mount-local-filesystem" {
+  count = "${var.red-node-count}"
+
+  depends_on = [
+    "google_compute_instance.red-nodes",
+    "rancher2_cluster.red",
+    "google_compute_instance.fs-nfs"
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = "${var.ssh-username}"
+    agent       = "false"
+    private_key = "${file("${var.ssh-private-key}")}"
+    host        = "${element(google_compute_instance.red-nodes.*.network_interface.0.network_ip, count.index)}"
+
+    bastion_host        = "${google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip}"
+    bastion_private_key = "${file("${var.ssh-private-key}")}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [<<EOF
+      sudo apt install -y \
+        nfs-common
+
+      sudo mkdir /persistent-storage
+      sudo mount nfs-vm:/mnt/disks/persistent-storage /persistent-storage
+    EOF
+    ]
+  }
+}
