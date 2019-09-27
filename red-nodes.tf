@@ -1,7 +1,7 @@
 resource "google_compute_instance" "red-nodes" {
   count        = "${var.red-node-count}"
   name         = "red-node-vm-${count.index}"
-  machine_type = "n1-standard-2"
+  machine_type = "n1-standard-1"
   tags         = ["red-nodes"]
 
   depends_on = [
@@ -25,6 +25,14 @@ resource "google_compute_instance" "red-nodes" {
       // this section is included to give external IP
     }
   }
+}
+
+resource "null_resource" "install-red-nodes" {
+  count = "${var.red-node-count}"
+
+  depends_on = [
+    "google_compute_instance.red-nodes"
+  ]
 
   connection {
     type        = "ssh"
@@ -49,6 +57,7 @@ resource "google_compute_instance" "red-nodes" {
 
   provisioner "remote-exec" {
     inline = [<<EOF
+      sudo modprobe br_netfilter
       sudo echo ${google_compute_instance.rancher-proxy.network_interface.0.network_ip} ${var.rancher-proxy-fqdn} | sudo tee -a /etc/hosts
       sudo mv apt-proxy.conf /etc/apt/apt.conf.d/proxy.conf
       sudo apt update
@@ -82,7 +91,7 @@ resource "null_resource" "register-red-nodes" {
   count = "${var.red-node-count}"
 
   depends_on = [
-    "google_compute_instance.red-nodes",
+    "null_resource.install-red-nodes",
     "rancher2_cluster.red"
   ]
 
@@ -125,7 +134,7 @@ resource "null_resource" "update-dns-red" {
   }
 }
 
-resource "null_resource" "mount-local-filesystem" {
+resource "null_resource" "mount-persistent-filesystem" {
   count = "${var.red-node-count}"
 
   depends_on = [
