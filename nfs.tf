@@ -58,16 +58,3 @@ resource "google_compute_instance" "fs-nfs" {
     ]
   }
 }
-
-resource "kubernetes_storage_class" "persistent-storage" {
-  depends_on = [
-    "null_resource.install-kubeconfig-locally"
-  ]
-
-  metadata {
-    name = "persistent-storage"
-  }
-
-  storage_provisioner = "kubernetes.io/no-provisioner"
-  reclaim_policy      = "Retain"
-}
