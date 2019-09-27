@@ -16,6 +16,8 @@ resource "rancher2_namespace" "cert-manager" {
     "rancher2_project.cert-manager"
   ]
 
+  wait_for_cluster = true
+
   name        = "cert-manager"
   project_id  = "${rancher2_project.cert-manager.id}"
   description = "Namespace for the cert-manager app"
