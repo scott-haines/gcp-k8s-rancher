@@ -42,6 +42,7 @@ resource "rancher2_app" "cert-manager" {
     "replicaCount"                  = 1
     "clusterissuerEnabled"          = true
     "ingressShim.defaultIssuerName" = "letsencrypt-prod"
+    "letsencrypt.name"              = "letsencrypt-prod"
     "letsencrypt.email"             = "${var.cert-manager-email}"
     "createCustomResource"          = true
     "webhook.enabled"               = false
