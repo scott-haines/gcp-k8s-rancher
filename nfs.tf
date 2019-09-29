@@ -3,6 +3,10 @@ resource "google_compute_instance" "fs-nfs" {
   machine_type = "f1-micro"
   tags         = ["fs-nfs"]
 
+  depends_on = [
+    "google_compute_instance.rancher-proxy"
+  ]
+
   metadata = {
     ssh-keys = "${var.ssh-username}:${file("~/.ssh/id_rsa.pub")}"
   }
