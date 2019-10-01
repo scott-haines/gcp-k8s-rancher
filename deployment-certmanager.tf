@@ -1,6 +1,6 @@
 resource "rancher2_project" "cert-manager" {
   depends_on = [
-    "google_compute_instance.red-nodes",
+    "null_resource.register-red-nodes",
     "rancher2_bootstrap.admin",
     "rancher2_cluster.red",
     "null_resource.update-dns-proxy"
