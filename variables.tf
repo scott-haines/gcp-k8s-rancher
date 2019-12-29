@@ -22,7 +22,7 @@ variable bastion {
     name     = "bastion"
     size     = "f1-micro"
     image    = "debian-cloud/debian-9"
-    username = "shaines"
+    username = ""
     dns = {
       use_google_dns = false
       username       = ""
