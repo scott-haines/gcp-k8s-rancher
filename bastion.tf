@@ -1,15 +1,15 @@
 resource "google_compute_instance" "bastion" {
-  name         = var.bastion.name
-  machine_type = var.bastion.size
+  name         = var.bastion_name
+  machine_type = var.bastion_size
   tags         = ["bastion"]
 
   metadata = {
-    ssh-keys = "${var.bastion.username}:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys = "${var.bastion_username}:${file("~/.ssh/id_rsa.pub")}"
   }
 
   boot_disk {
     initialize_params {
-      image = var.bastion.image
+      image = var.bastion_image
     }
   }
 
@@ -35,7 +35,7 @@ output "bastion_public_ip" {
 }
 
 resource "null_resource" "bastion-google-dns" {
-  count = var.bastion.dns.use_google_dns ? 1 : 0
+  count = var.bastion_dns_use_google_dns ? 1 : 0
 
   # By storing state within the triggers this ensures that the destroy-time provisioner will have
   #  access to the needed variables.  It will also ensure that recreation will happen correctly
@@ -45,14 +45,14 @@ resource "null_resource" "bastion-google-dns" {
   #  dns api as the credentials being used are stale.
   triggers = {
     bastion_nat_ip = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip,
-    username       = var.bastion.dns.username
-    password       = var.bastion.dns.password
-    fqdn           = var.bastion.dns.fqdn
+    username       = var.bastion_dns_username
+    password       = var.bastion_dns_password
+    fqdn           = var.bastion_dns_fqdn
   }
 
   provisioner "local-exec" {
     when    = create
-    command = "curl -X POST 'https://${self.triggers.username}:${var.bastion.dns.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&myip=${self.triggers.bastion_nat_ip}&offline=no'"
+    command = "curl -X POST 'https://${self.triggers.username}:${self.triggers.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&myip=${self.triggers.bastion_nat_ip}&offline=no'"
   }
 
   provisioner "local-exec" {

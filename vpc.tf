@@ -1,13 +1,13 @@
 resource "google_compute_network" "vpc" {
-  name = var.vpc.name
+  name = var.vpc_name
 
   auto_create_subnetworks = false
 }
 
 resource "google_compute_subnetwork" "vpc-subnet" {
-  name          = var.vpc.subnet_name
+  name          = var.vpc_subnet_name
   network       = google_compute_network.vpc.name
-  ip_cidr_range = var.vpc.subnet_cidr_block
+  ip_cidr_range = var.vpc_subnet_cidr_block
 }
 
 resource "google_compute_firewall" "allow-internal" {
