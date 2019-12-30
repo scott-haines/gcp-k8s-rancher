@@ -15,7 +15,7 @@ Run `make preflight-check` to ensure versions are up to date.
 # Getting Started
 1. Create a storage bucket in GCP [https://cloud.google.com/storage/docs/creating-buckets]
 1. Export the following variables with their correct values:
-    * `export TF_VAR_PROJECT_ID=<GCP_PROJECT_ID>`
+* `export TF_VAR_PROJECT_ID=<GCP_PROJECT_ID>`
     
 1. Run `make preflight-check` to check that pre-requisites are all met.
 1. Run `make service-account` to generate a gcp service account & exported key which will be used for all terraform commands.
@@ -46,12 +46,11 @@ Firewall rule to allow ssh (TCP 22) access to the bastion resource from any IP a
 ### google_compute_instance bastion
 Bastion server to act as a jumpbox to get access to the other resources.
 #### Outputs
-    * bastion_public_ip - The public IP address of the bastion server.
+* bastion_public_ip - The public IP address of the bastion server.
 ### null_resource bastion-google-dns
 An optional resource which set the public dns for the public IP of the bastion using google dns.
-Should you wish to make use of the google DNS objects override the following variables using your preferred method:
-    * bastion.dns.use_google_dns = true
-    * bastion.dns.username
-    * bastion.dns.password
-    * bastion.dns.fqdn
-    
+Should you wish to make use of the google DNS objects override the following variables using your preferred method:    
+* bastion.dns.use_google_dns = true
+* bastion.dns.username
+* bastion.dns.password
+* bastion.dns.fqdn
