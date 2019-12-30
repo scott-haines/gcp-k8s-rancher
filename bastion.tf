@@ -23,10 +23,19 @@ resource "google_compute_instance" "bastion" {
 
   connection {
     type        = "ssh"
-    user        = var.ssh-username
+    user        = var.bastion_username
     agent       = "false"
     private_key = file("~/.ssh/id_rsa")
     host        = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
+  }
+
+  provisioner "file" {
+    source      = "~/.ssh/id_rsa"
+    destination = "~/.ssh/id_rsa"
+  }
+
+  provisioner "remote-exec" {
+    inline = ["chmod 600 ~/.ssh/id_rsa"]
   }
 }
 
