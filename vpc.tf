@@ -38,3 +38,15 @@ resource "google_compute_firewall" "allow-ssh-from-anywhere-to-bastion" {
 
   target_tags = ["bastion"]
 }
+
+resource "google_compute_firewall" "allow-http-https-from-anywhere-to-rancher-web" {
+  name = "allow-rancher-web"
+  network = google_compute_network.vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports = ["80", "443"]
+  }
+
+  target_tags = ["rancher-web"]
+}

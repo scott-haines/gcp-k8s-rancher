@@ -41,6 +41,8 @@ The sole subnet for all resources which require an internal IP address.
 Firewall rule to allow all internal TCP and ICMP traffic to flow.  This is for development purposes only, in a production environment internal traffic flow should be limited to only the required ports.
 ### google_compute_firewall allow-ssh-from-anywhere-to-bastion
 Firewall rule to allow ssh (TCP 22) access to the bastion resource from any IP address.
+### google_compute_firewall allow-http-https-from-anywhere-to-rancher-web
+Firewall rule to allow http (TCP 80) and https (TCP 443) access to the rancher-web resource from any IP address.
 
 ## bastion.tf
 ### google_compute_instance bastion
@@ -50,7 +52,20 @@ Bastion server to act as a jumpbox to get access to the other resources.
 ### null_resource bastion-google-dns
 An optional resource which set the public dns for the public IP of the bastion using google dns.
 Should you wish to make use of the google DNS objects override the following variables using your preferred method:    
-* bastion.dns.use_google_dns = true
-* bastion.dns.username
-* bastion.dns.password
-* bastion.dns.fqdn
+* bastion_dns_use_google_dns = true
+* bastion_dns_username
+* bastion_dns_password
+* bastion_dns_fqdn
+
+## rancher-web.tf
+### google_compute_instance rancher-web
+The server which hosts the main rancher web interface.
+#### Outputs
+* rancher_web_public_ip - The publicIP address of the rancher web server.
+### null_resource rancher-web-google-dns
+An optional resource which set the public dns for the public IP of rancher-web using google dns.
+Should you wish to make use of the google DNS objects override the following variables using your preferred method:    
+* rancher_web_dns_use_google_dns = true
+* rancher_web_dns_username
+* rancher_web_dns_password
+* rancher_web_dns_fqdn

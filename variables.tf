@@ -52,3 +52,31 @@ variable bastion_dns_password {
 variable bastion_dns_fqdn {
   default = ""
 }
+
+variable rancher_web_name {
+  default = "rancher-web"
+}
+
+variable rancher_web_size {
+  default = "g1-small"
+}
+
+variable rancher_web_image {
+  default = "debian-cloud/debian-9"
+}
+
+variable rancher_web_dns_use_google_dns {
+  default = false
+}
+
+variable rancher_web_dns_username {
+  default = ""
+}
+
+variable rancher_web_dns_password {
+  default = ""
+}
+
+variable rancher_web_dns_fqdn {
+  default = ""
+}
