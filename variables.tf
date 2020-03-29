@@ -80,3 +80,7 @@ variable rancher_web_dns_password {
 variable rancher_web_dns_fqdn {
   default = ""
 }
+
+variable rancher_web_admin_password {
+  default = ""
+}

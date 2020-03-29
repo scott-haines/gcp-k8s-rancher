@@ -69,3 +69,7 @@ Should you wish to make use of the google DNS objects override the following var
 * rancher_web_dns_username
 * rancher_web_dns_password
 * rancher_web_dns_fqdn
+### null_resource rancher-web-nginx
+Installs and configures nginx on the vm running rancher.
+### rancher2_bootstrap admin
+A special bootstrap provisioner version of the rancher2 provider (defined by specifying the provider) which is designed to configure the initial rancher setup (admin password prompt and opt-in checkbox normally presented via a browser).

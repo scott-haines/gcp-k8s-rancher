@@ -11,7 +11,7 @@ provider "google" {
 
 provider "rancher2" {
   alias     = "bootstrap"
-  api_url   = "https://${var.rancher-proxy-fqdn}"
+  api_url   = "https://${var.rancher_web_dns_fqdn}"
   bootstrap = true
 }
 

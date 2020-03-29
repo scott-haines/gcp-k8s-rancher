@@ -52,11 +52,8 @@ resource "google_compute_instance" "rancher-web" {
         -d \
         --name rancher-server \
         --restart=unless-stopped \
-        -p 80:80 -p 443:443 \
+        -p 8080:80 -p 8443:443 \
         rancher/rancher:latest --no-cacerts
-
-      # don't consider provisioning complete until ping pong
-      while ! curl -k https://localhost/ping; do sleep 8; done
     EOF
     ]
   }
@@ -77,9 +74,9 @@ resource "null_resource" "rancher-web-google-dns" {
   #  dns api as the credentials being used are stale.
   triggers = {
     rancher_web_nat_ip = google_compute_instance.rancher-web.network_interface.0.access_config.0.nat_ip,
-    username       = var.rancher_web_dns_username
-    password       = var.rancher_web_dns_password
-    fqdn           = var.rancher_web_dns_fqdn
+    username           = var.rancher_web_dns_username
+    password           = var.rancher_web_dns_password
+    fqdn               = var.rancher_web_dns_fqdn
   }
 
   provisioner "local-exec" {
@@ -92,4 +89,59 @@ resource "null_resource" "rancher-web-google-dns" {
     command    = "curl -X POST 'https://${self.triggers.username}:${self.triggers.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&offline=yes'"
     on_failure = continue
   }
+}
+
+resource "null_resource" "rancher-web-nginx" {
+  triggers = {
+    rancher_web = google_compute_instance.rancher-web.id
+  }
+
+  depends_on = [
+    google_compute_instance.rancher-web
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = var.bastion_username
+    agent       = false
+    private_key = file("~/.ssh/id_rsa")
+    host        = google_compute_instance.rancher-web.network_interface.0.network_ip
+
+    bastion_host        = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
+    bastion_private_key = file("~/.ssh/id_rsa")
+  }
+
+  provisioner "file" {
+    source      = "templates/nginx.tmpl"
+    destination = "~/nginx.tmpl"
+  }
+
+  provisioner "remote-exec" {
+    inline = [<<EOF
+      sudo apt update
+      sudo apt install -y nginx
+      sudo apt install -y certbot python-certbot-nginx -t stretch-backports
+      sudo sed -i s/RANCHER_WEB_FQDN/${var.rancher_web_dns_fqdn}/g nginx.tmpl
+      sudo mv nginx.tmpl /etc/nginx/nginx.conf
+
+      sudo systemctl restart nginx
+      sudo certbot --non-interactive --nginx --domains ${var.rancher_web_dns_fqdn} --agree-tos --register-unsafely-without-email
+
+      # don't consider provisioning complete until ping pong
+      while ! curl -k https://localhost/ping; do sleep 8; done
+    EOF
+    ]
+  }
+}
+
+resource "rancher2_bootstrap" "admin" {
+  depends_on = [
+    null_resource.rancher-web-google-dns,
+    null_resource.rancher-web-nginx
+  ]
+
+  provider = rancher2.bootstrap
+
+  password  = var.rancher_web_admin_password
+  telemetry = false
 }
