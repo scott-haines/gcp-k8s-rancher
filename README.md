@@ -9,7 +9,10 @@ Run `make preflight-check` to ensure versions are up to date.
 1. Google Cloud SDK 251.0.0 [https://cloud.google.com/sdk/docs/quickstarts]
     * Ensure that gcloud can run locally and is configured to use your desired environment.
 1. GCP APIs enabled (run `make preflight-check` to test)
+    * cloudresourcemanager.googleapis.com `gcloud services enable cloudresourcemanager.googleapis.com`
     * compute.googleapis.com `gcloud services enable compute.googleapis.com`
+    * container.googleapis.com `gcloud services enable container.googleapis.com`
+    * iam.googleapis.com `gcloud services enable iam.googleapis.com`
 1. Terraform v0.12.18 [https://learn.hashicorp.com/terraform/getting-started/install.html]
 
 # Getting Started
