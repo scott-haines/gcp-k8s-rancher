@@ -125,6 +125,11 @@ resource "null_resource" "rancher-web-nginx" {
       sudo mv nginx.tmpl /etc/nginx/nginx.conf
 
       sudo systemctl restart nginx
+
+      # put an artificial delay in here to ensure that everything is ready to respond to the certbot challenge
+      # TODO: Find a better way of handling this
+      sleep 2m
+
       sudo certbot --non-interactive --nginx --domains ${var.rancher_web_dns_fqdn} --agree-tos --register-unsafely-without-email
 
       # don't consider provisioning complete until ping pong
