@@ -73,3 +73,8 @@ Should you wish to make use of the google DNS objects override the following var
 Installs and configures nginx on the vm running rancher.
 ### rancher2_bootstrap admin
 A special bootstrap provisioner version of the rancher2 provider (defined by specifying the provider) which is designed to configure the initial rancher setup (admin password prompt and opt-in checkbox normally presented via a browser).
+
+# Cluster Definitions
+By default there is a dev cluster defined in cluster-dev.tf to use as an example of provisioning a cluster.
+
+The example provided uses an explicitly defined cluster.  An alertnative if you want to have a pool of clusters would be to variablize the configuration and leverage terraform to provision multiple clusters by using the "count" attribute.

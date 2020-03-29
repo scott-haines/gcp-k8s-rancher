@@ -14,8 +14,32 @@ service-account:
 	@gcloud projects add-iam-policy-binding $${TF_VAR_PROJECT_ID} \
   		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
   		--role roles/compute.securityAdmin
+	@gcloud projects add-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/iam.serviceAccountAdmin
+	@gcloud projects add-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/iam.serviceAccountKeyAdmin
+	@gcloud projects add-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/iam.securityAdmin
+	@gcloud projects add-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/container.admin
 
 remove-service-account:
+	@gcloud projects remove-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/container.admin
+	@gcloud projects remove-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/iam.securityAdmin
+	@gcloud projects remove-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/iam.serviceAccountKeyAdmin
+	@gcloud projects remove-iam-policy-binding $${TF_VAR_PROJECT_ID} \
+  		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
+  		--role roles/iam.serviceAccountAdmin
 	@gcloud projects remove-iam-policy-binding $${TF_VAR_PROJECT_ID} \
   		--member serviceAccount:gcp-k8s-rancher@$${TF_VAR_PROJECT_ID}.iam.gserviceaccount.com \
   		--role roles/compute.securityAdmin
@@ -37,4 +61,7 @@ preflight-check:
 	@./makefile-helpers/preflight-exports-check.sh TF_VAR_PROJECT_ID
 
 	@echo checking gcloud service apis -----------------
+	@./makefile-helpers/preflight-service-check.sh cloudresourcemanager.googleapis.com
 	@./makefile-helpers/preflight-service-check.sh compute.googleapis.com
+	@./makefile-helpers/preflight-service-check.sh container.googleapis.com
+	@./makefile-helpers/preflight-service-check.sh iam.googleapis.com
