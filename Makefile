@@ -55,7 +55,7 @@ remove-service-account:
 preflight-check:
 	@echo checking versions of key tools ---------------
 	@./makefile-helpers/preflight-semver-check.sh 251.0.0 $(shell gcloud version --format="value('Google Cloud SDK')") gcloud
-	@./makefile-helpers/preflight-semver-check.sh 0.12.18 $(shell terraform version | grep Terraform | awk -F "v" '{print $$NF}') terraform
+	@./makefile-helpers/preflight-semver-check.sh 0.12.18 $(shell terraform version | grep -m 1 Terraform | awk -F "v" '{print $$NF}') terraform
 	
 	@echo checking for exported variables --------------
 	@./makefile-helpers/preflight-exports-check.sh TF_VAR_PROJECT_ID
