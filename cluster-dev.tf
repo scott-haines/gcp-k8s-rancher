@@ -43,9 +43,9 @@ resource "rancher2_cluster" "dev" {
     machine_type                            = "n1-standard-1"
     maintenance_window                      = ""
     master_ipv4_cidr_block                  = ""
-    master_version                          = "1.14.10-gke.24"
+    master_version                          = "1.15.9-gke.24"
     network                                 = google_compute_network.vpc.name
-    node_count                              = 1
+    node_count                              = 3
     node_pool                               = ""
     node_version                            = ""
     project_id                              = var.PROJECT_ID
@@ -73,5 +73,62 @@ resource "null_resource" "install-kubeconfig-locally" {
 
   provisioner "local-exec" {
     command = "echo '${rancher2_cluster.dev.kube_config}' | tee ~/.kube/config"
+  }
+}
+
+resource "null_resource" "provision-ingress-controller" {
+  depends_on = [
+    rancher2_cluster.dev,
+    null_resource.install-kubeconfig-locally
+  ]
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.26.1/deploy/static/mandatory.yaml"
+  }
+}
+
+resource "null_resource" "provision-load-balancer" {
+  depends_on = [
+    rancher2_cluster.dev,
+    null_resource.provision-ingress-controller
+  ]
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.26.1/deploy/static/provider/cloud-generic.yaml"
+  }
+}
+
+variable loadbalancer_dns_username {
+  default = ""
+}
+
+variable loadbalancer_dns_password {
+  default = ""
+}
+
+variable loadbalancer_dns_fqdn {
+  default = ""
+}
+
+resource "null_resource" "wildcard-loadbalancer-google-dns" {
+  triggers = {
+    username       = var.loadbalancer_dns_username
+    password       = var.loadbalancer_dns_password
+    fqdn           = var.loadbalancer_dns_fqdn
+  }
+
+  provisioner "local-exec" {
+    when    = create
+    command = <<EOF
+    curl -X POST "https://${self.triggers.username}:${self.triggers.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&myip=$(kubectl get svc --namespace=ingress-nginx -o=json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')&offline=no"
+    EOF
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<EOF
+    curl -X POST "https://${self.triggers.username}:${self.triggers.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&offline=yes"
+    EOF
+    on_failure = continue
   }
 }
