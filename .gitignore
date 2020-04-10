@@ -5,3 +5,4 @@ terraform.tfvars
 secrets
 tfplan
 *tfstate*
+deployments
