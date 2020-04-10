@@ -7,7 +7,7 @@ events {
 
 http {
     upstream rancher {
-        server rancher-vm:80;
+        server localhost:8080;
     }
 
     map $http_upgrade $connection_upgrade {
@@ -29,21 +29,16 @@ http {
             proxy_set_header Connection $connection_upgrade;
         }
         
-        server_name RANCHER_PROXY_FQDN; # managed by Certbot
-        listen 443 ssl; # managed by Certbot
-        ssl_certificate /etc/letsencrypt/live/RANCHER_PROXY_FQDN/fullchain.pem; # managed by Certbot
-        ssl_certificate_key /etc/letsencrypt/live/RANCHER_PROXY_FQDN/privkey.pem; # managed by Certbot
-        include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-        ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+        server_name RANCHER_WEB_FQDN;
     }
 
     server {
-        if ($host = RANCHER_PROXY_FQDN) {
+        if ($host = RANCHER_WEB_FQDN) {
             return 301 https://$host$request_uri;
         } # managed by Certbot
 
             listen 80 ;
-            server_name RANCHER_PROXY_FQDN;
+            server_name RANCHER_WEB_FQDN;
             return 404; # managed by Certbot
     }
 }
