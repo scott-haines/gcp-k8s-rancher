@@ -132,3 +132,73 @@ resource "null_resource" "wildcard-loadbalancer-google-dns" {
     on_failure = continue
   }
 }
+
+variable letsencrypt_email {
+  default = ""
+}
+
+resource "null_resource" "provision-cert-manager" {
+  depends_on = [
+    null_resource.wildcard-loadbalancer-google-dns
+  ]
+  triggers = {
+    staging_email_address = var.letsencrypt_email
+    prod_email_address = var.letsencrypt_email
+  }
+  
+  provisioner "local-exec" {
+    when    = create
+    command = <<EOT
+    kubectl create namespace cert-manager
+    kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.12.0/cert-manager.yaml
+    
+    # one-liner to wait until the webhook deployment is ready
+    while [[ $(kubectl get pods --namespace=cert-manager -l app=webhook -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "waiting for pod" && sleep 20; done
+
+    # Create staging issuer
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+ name: letsencrypt-staging
+ namespace: cert-manager
+spec:
+ acme:
+   # The ACME server URL
+   server: https://acme-staging-v02.api.letsencrypt.org/directory
+   # Email address used for ACME registration
+   email: ${self.triggers.staging_email_address}
+   # Name of a secret used to store the ACME account private key
+   privateKeySecretRef:
+     name: letsencrypt-staging
+   # Enable the HTTP-01 challenge provider
+   solvers:
+   - http01:
+       ingress:
+         class:  nginx
+EOF
+
+    # Create prod issuer
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: cert-manager
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: ${self.triggers.prod_email_address}
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    # Enable the HTTP-01 challenge provider
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+    EOT
+  }
+}
