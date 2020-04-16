@@ -1,2 +1,8 @@
 image:
   file: .gitpod.Dockerfile
+
+tasks:
+  - command: ./bootstrap-environment.go
+vscode:
+  extensions:
+    - 4ops.terraform@0.1.8:BXIXsgEk7g2/rZHrFFIj+Q==

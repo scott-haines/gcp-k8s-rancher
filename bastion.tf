@@ -1,10 +1,15 @@
+resource "tls_private_key" "bastion-key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "google_compute_instance" "bastion" {
   name         = var.bastion_name
   machine_type = var.bastion_size
   tags         = ["bastion"]
 
   metadata = {
-    ssh-keys = "${var.bastion_username}:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys = "${var.bastion_username}:${tls_private_key.bastion-key.public_key_openssh}"
   }
 
   boot_disk {
@@ -25,17 +30,8 @@ resource "google_compute_instance" "bastion" {
     type        = "ssh"
     user        = var.bastion_username
     agent       = "false"
-    private_key = file("~/.ssh/id_rsa")
+    private_key = tls_private_key.bastion-key.private_key_pem
     host        = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
-  }
-
-  provisioner "file" {
-    source      = "~/.ssh/id_rsa"
-    destination = "~/.ssh/id_rsa"
-  }
-
-  provisioner "remote-exec" {
-    inline = ["chmod 600 ~/.ssh/id_rsa"]
   }
 }
 
