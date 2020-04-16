@@ -6,15 +6,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var (
-	cwd              string
-	projectID        string
+	cwd       string
+	projectID string
 )
 
 func init() {
@@ -50,9 +52,9 @@ func main() {
 func checkEnvironment() error {
 	// make sure required tools are installed
 	requiredTools := map[string]string{
-		"gcloud": 		"Google Cloud SDK is not installed - head over to https://cloud.google.com/sdk/install and install it",
-		"jq": 			"jq is not installed - make sure `jq` is available in the PATH",
-		"terraform": 	"terraform is not installed - make sure `terraform` is available in the PATH",
+		"gcloud":    "Google Cloud SDK is not installed - head over to https://cloud.google.com/sdk/install and install it",
+		"jq":        "jq is not installed - make sure `jq` is available in the PATH",
+		"terraform": "terraform is not installed - make sure `terraform` is available in the PATH",
 	}
 	for cmd, errmsg := range requiredTools {
 		if _, err := exec.LookPath(cmd); err != nil {
@@ -128,7 +130,7 @@ func createServiceAccount() error {
 	project, _ := run("gcloud", "config", "get-value", "core/project")
 	project = strings.TrimSpace(project)
 	iamAccount := fmt.Sprintf("gcp-k8s-rancher@%s.iam.gserviceaccount.com", project)
-	
+
 	out, err := run("gcloud", "iam", "service-accounts", "create", "gcp-k8s-rancher", "--display-name", "GCP-K8S-RANCHER")
 	if err != nil && strings.Contains(string(out), "Service account gcp-k8s-rancher already exists within project") {
 		// Service account already exists, this is ok.
@@ -138,7 +140,7 @@ func createServiceAccount() error {
 
 	if _, err := os.Stat("secrets/gcp-k8s-rancher-key.json"); os.IsNotExist(err) {
 		// create the key only if a key doesn't exist
-  		out, err := run("gcloud", "iam", "service-accounts", "keys", "create", "secrets/gcp-k8s-rancher-key.json", "--iam-account", iamAccount)
+		out, err := run("gcloud", "iam", "service-accounts", "keys", "create", "secrets/gcp-k8s-rancher-key.json", "--iam-account", iamAccount)
 		if err != nil {
 			os.Remove("secrets/gcp-k8s-rancher-key.json")
 			return fmt.Errorf(out)
@@ -161,7 +163,7 @@ func createServiceAccount() error {
 			return fmt.Errorf(string(out))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -175,23 +177,59 @@ func initializeTerraform() error {
 }
 
 func initializeTFVars() error {
-	os.Remove("terraform.tfvars")
+	if _, err := os.Stat("terraform.tfvars"); err == nil {
+		fmt.Printf("  \033[2mNot Required - delete terraform.tfvars\n")
+		return nil
+	}
+
+	os.Remove("terraform.tfvars.temp")
 
 	project, _ := run("gcloud", "config", "get-value", "core/project")
 	project = strings.TrimSpace(project)
 
-	f, err := os.OpenFile("terraform.tfvars", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    if err != nil {
-        return fmt.Errorf("Error opening terraform.tfvars")
+	f, err := os.OpenFile("terraform.tfvars.temp", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("Error opening terraform.tfvars.temp")
 	}
-	
-    if _, err := f.Write([]byte(fmt.Sprintf("PROJECT_ID = \"%s\"", project))); err != nil {
-        return fmt.Errorf("Error writing to terraform.tfvars")
+
+	rancherAdm := generateRandomPassword()
+	tfVars := []struct {
+		Variable string
+		DataType string
+		Value    string
+	}{
+		{"PROJECT_ID", "", project},
+		{"bastion_dns_use_google_dns", "[True/False]", ""},
+		{"bastion_dns_username", "[string/blank]", ""},
+		{"bastion_dns_password", "[string/blank]", ""},
+		{"bastion_dns_fqdn", "[string/blank]", ""},
+		{"rancher_web_dns_use_google_dns", "[True/False]", ""},
+		{"rancher_web_dns_username", "[string/blank]", ""},
+		{"rancher_web_dns_password", "[string/blank]", ""},
+		{"rancher_web_dns_fqdn", "[string/blank]", ""},
+		{"rancher_web_admin_password", "", rancherAdm},
 	}
-	
-    if err := f.Close(); err != nil {
-        return fmt.Errorf("Error closing terraform.tfvars")
-    }
+
+	var val string
+	for _, t := range tfVars {
+		if t.Value == "" {
+			fmt.Printf("\n  \033[36mPlease provide value for %s %s.\n  > ", t.Variable, t.DataType)
+			fmt.Scanln(&val)
+			t.Value = val
+		}
+
+		if _, err := f.Write([]byte(fmt.Sprintf("%s = \"%s\"\n", t.Variable, t.Value))); err != nil {
+			return fmt.Errorf("Error writing to terraform.tfvars.temp")
+		}
+	}
+
+	fmt.Printf("  \033[2mRancher admin password: %s\n", rancherAdm)
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("Error closing terraform.tfvars.temp")
+	}
+
+	os.Rename("terraform.tfvars.temp", "terraform.tfvars")
 
 	return nil
 }
@@ -253,4 +291,17 @@ func runC(command string, args ...string) *exec.Cmd {
 	cmd.Dir = cwd
 	cmd.Env = os.Environ()
 	return cmd
+}
+
+func generateRandomPassword() string {
+	const charset = "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	var password string
+
+	rand.Seed(time.Now().UnixNano())
+	for i := 0; i < 40; i++ {
+		p := charset[rand.Intn(len(charset))]
+		password += string(p)
+	}
+	return password
 }
