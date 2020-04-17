@@ -1,4 +1,7 @@
 resource "google_service_account" "dev-gke-service-account" {
+  depends_on = [
+      rancher2_bootstrap.admin
+  ]
   account_id   = "dev-gke-service-account"
   display_name = "dev gke service account"
 }
@@ -72,7 +75,7 @@ resource "null_resource" "install-kubeconfig-locally" {
   ]
 
   provisioner "local-exec" {
-    command = "echo '${rancher2_cluster.dev.kube_config}' | tee ~/.kube/config"
+    command = "mkdir -p ~/.kube && echo '${rancher2_cluster.dev.kube_config}' | tee ~/.kube/config"
   }
 }
 
@@ -123,7 +126,8 @@ resource "null_resource" "wildcard-loadbalancer-google-dns" {
   provisioner "local-exec" {
     when    = create
     command = <<EOF
-    curl -X POST "https://${self.triggers.username}:${self.triggers.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&myip=$(kubectl get svc --namespace=ingress-nginx -o=json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')&offline=no"
+    IP=$(kubectl get svc --namespace=ingress-nginx -o=json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
+    curl -X POST "https://${self.triggers.username}:${self.triggers.password}@domains.google.com/nic/update?hostname=${self.triggers.fqdn}&myip=$${IP}&offline=no"
     EOF
   }
 
@@ -151,6 +155,7 @@ resource "null_resource" "provision-cert-manager" {
   
   provisioner "local-exec" {
     when    = create
+    interpreter = ["/bin/bash", "-c"]
     command = <<EOT
     kubectl create namespace cert-manager
     kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.12.0/cert-manager.yaml
