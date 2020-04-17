@@ -33,6 +33,6 @@ RUN mkdir $TF_DIR \
 ARG K8S_DIR=/opt/kubernetes
 ARG K8S_VER=v1.18.0
 ENV PATH=$K8S_DIR:$PATH
-RUN mkdir /usr/local/kubernetes/ && \
+RUN mkdir ${K8S_DIR} && \
     curl -L https://storage.googleapis.com/kubernetes-release/release/${K8S_VER}/bin/linux/amd64/kubectl -o ${K8S_DIR}/kubectl \
     chmod +x ${K8S_DIR}/kubectl
