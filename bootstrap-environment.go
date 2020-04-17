@@ -209,6 +209,10 @@ func initializeTFVars() error {
 		{"rancher_web_dns_password", "[string/blank]", ""},
 		{"rancher_web_dns_fqdn", "[string/blank]", ""},
 		{"rancher_web_admin_password", "", rancherAdm},
+		{"loadbalancer_dns_username", "[string/blank]", ""},
+		{"loadbalancer_dns_password", "[string/blank]", ""},
+		{"loadbalancer_dns_fqdn", "[string/blank]", ""},
+		{"letsencrypt_email", "[string/blank]", ""},
 	}
 
 	var val string
