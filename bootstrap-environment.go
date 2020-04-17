@@ -42,11 +42,11 @@ func main() {
 	printStep("Creating gcp-k8s-rancher service account")
 	failOnError(createServiceAccount())
 
-	printStep("Initializing Terraform")
-	failOnError(initializeTerraform())
-
 	printStep("Initializing tfvars")
 	failOnError(initializeTFVars())
+
+	printStep("Initializing Terraform")
+	failOnError(initializeTerraform())
 }
 
 func checkEnvironment() error {
