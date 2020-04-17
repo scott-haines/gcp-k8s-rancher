@@ -55,6 +55,7 @@ func checkEnvironment() error {
 		"gcloud":    "Google Cloud SDK is not installed - head over to https://cloud.google.com/sdk/install and install it",
 		"jq":        "jq is not installed - make sure `jq` is available in the PATH",
 		"terraform": "terraform is not installed - make sure `terraform` is available in the PATH",
+		"kubectl":   "kubectl is not installed - make sure `kubectl` is available in the PATH",
 	}
 	for cmd, errmsg := range requiredTools {
 		if _, err := exec.LookPath(cmd); err != nil {

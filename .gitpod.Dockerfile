@@ -28,3 +28,11 @@ RUN mkdir $TF_DIR \
     && curl -OJ https://releases.hashicorp.com/terraform/${TF_VER}/terraform_${TF_VER}_linux_amd64.zip \
     && unzip terraform_${TF_VER}_linux_amd64.zip -d $TF_DIR \
     && rm terraform_${TF_VER}_linux_amd64.zip
+
+### Kubectl ###
+ARG K8S_DIR=/opt/kubernetes
+ARG K8S_VER=v1.18.0
+ENV PATH=$K8S_DIR:$PATH
+RUN mkdir /usr/local/kubernetes/ && \
+    curl -L https://storage.googleapis.com/kubernetes-release/release/${K8S_VER}/bin/linux/amd64/kubectl -o ${K8S_DIR}/kubectl \
+    chmod +x ${K8S_DIR}/kubectl
