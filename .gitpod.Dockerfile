@@ -33,6 +33,6 @@ RUN mkdir $TF_DIR \
 ARG KS_DIR=/opt/kubernetes
 ARG KS_VER=v1.18.0
 ENV PATH=$KS_DIR:$PATH
-RUN mkdir $KS_DIR && \
-    curl -L https://storage.googleapis.com/kubernetes-release/release/${KS_VER}/bin/linux/amd64/kubectl -o ${KS_DIR}/kubectl \
-    chmod +x ${KS_DIR}/kubectl
+RUN mkdir $KS_DIR \
+    && curl -L https://storage.googleapis.com/kubernetes-release/release/${KS_VER}/bin/linux/amd64/kubectl -o ${KS_DIR}/kubectl \
+    && chmod +x ${KS_DIR}/kubectl
