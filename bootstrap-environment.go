@@ -199,11 +199,11 @@ func initializeTFVars() error {
 		Value    string
 	}{
 		{"PROJECT_ID", "", project},
-		{"bastion_dns_use_google_dns", "[True/False]", ""},
+		{"bastion_dns_use_google_dns", "[true/false]", ""},
 		{"bastion_dns_username", "[string/blank]", ""},
 		{"bastion_dns_password", "[string/blank]", ""},
 		{"bastion_dns_fqdn", "[string/blank]", ""},
-		{"rancher_web_dns_use_google_dns", "[True/False]", ""},
+		{"rancher_web_dns_use_google_dns", "[true/false]", ""},
 		{"rancher_web_dns_username", "[string/blank]", ""},
 		{"rancher_web_dns_password", "[string/blank]", ""},
 		{"rancher_web_dns_fqdn", "[string/blank]", ""},
