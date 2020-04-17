@@ -111,6 +111,9 @@ variable loadbalancer_dns_fqdn {
 }
 
 resource "null_resource" "wildcard-loadbalancer-google-dns" {
+  depends_on = [
+      null_resource.provision-load-balancer
+  ]
   triggers = {
     username       = var.loadbalancer_dns_username
     password       = var.loadbalancer_dns_password
