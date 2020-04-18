@@ -179,7 +179,7 @@ func initializeTerraform() error {
 
 func initializeTFVars() error {
 	if _, err := os.Stat("terraform.tfvars"); err == nil {
-		fmt.Printf("  \033[2mNot Required - delete terraform.tfvars\n")
+		fmt.Printf("  \033[2mNot Required - delete terraform.tfvars to force prompts\n")
 		return nil
 	}
 

@@ -5,36 +5,33 @@ This package uses Terraform to create and provision Rancher on GCP.  It attempts
 
 # Prerequisites
 Older versions may work but are untested and unconfirmed.
-Run `make preflight-check` to ensure versions are up to date.
-1. Google Cloud SDK 251.0.0 [https://cloud.google.com/sdk/docs/quickstarts]
-    * Ensure that gcloud can run locally and is configured to use your desired environment.
-1. Terraform v0.12.18 [https://learn.hashicorp.com/terraform/getting-started/install.html]
+Run `./bootstrap-environment` to run the interactive setup script.  It should be re-entrant so if it fails at any point it can safely be rerun.
+1. Google Cloud SDK 245.0.0 [https://cloud.google.com/sdk/docs/quickstarts]
+1. Terraform v0.12.24 [https://learn.hashicorp.com/terraform/getting-started/install.html]
 1. jq jq-1.6 [https://stedolan.github.io/jq/]
-1. GCP APIs enabled (run `make preflight-check` to test)
+1. GCP APIs enabled - they will be automatically enabled by the bootstrap-environment script.
     * cloudresourcemanager.googleapis.com `gcloud services enable cloudresourcemanager.googleapis.com`
     * compute.googleapis.com `gcloud services enable compute.googleapis.com`
     * container.googleapis.com `gcloud services enable container.googleapis.com`
     * iam.googleapis.com `gcloud services enable iam.googleapis.com`
 
 # Getting Started
-1. Create a storage bucket in GCP [https://cloud.google.com/storage/docs/creating-buckets]
-1. Export the following variables with their correct values:
-* `export TF_VAR_PROJECT_ID=<GCP_PROJECT_ID>`
-    
-1. Run `make preflight-check` to check that pre-requisites are all met.
-1. Run `make service-account` to generate a gcp service account & exported key which will be used for all terraform commands.
-1. Run `terraform init` to initialize the terraform providers.
-1. Run `terraform apply` to create all the resources.
+1. Run `./bootstrap-environment` and follow all instructions/prompts to setup your local environment.
 
 # Cleaning Up
 1. Run `terraform destroy` to remove all resources by terraform.
-1. Run `make remove-service-account` to clean up the service account and delete the API token file.
+1. Remove the GCP service account (gcp-k8s-rancher) created by the bootstrap-environment script.
+1. Delete the `secrets/gcp-k8s-rancher-key.json` file
 
 # Resources
 The following resources are created as part of this package
 
 ## variables.tf
-All overridable variables are contained in this file.  Variables can be overridden using normal terraform methods (env vars begining with `TF_VAR_`, autovars, etc.)
+All overridable variables are contained in this file.
+
+If using `./bootstrap-environment` to initialize your environment your configuration will be placed into `terraform.tfvars`
+
+Variables can be overridden using normal terraform methods (env vars begining with `TF_VAR_`, autovars, etc.)
 
 ## vpc.tf
 ### google_compute_network vpc
