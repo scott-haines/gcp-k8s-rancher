@@ -1,3 +1,4 @@
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/scott-haines/gcp-k8s-rancher) 
 # Rancher with GCP
 
 # Purpose
@@ -16,7 +17,7 @@ Run `./bootstrap-environment` to run the interactive setup script.  It should be
     * iam.googleapis.com `gcloud services enable iam.googleapis.com`
 
 # Getting Started
-1. Run `./bootstrap-environment` and follow all instructions/prompts to setup your local environment.
+Run `./bootstrap-environment` and follow all instructions/prompts to setup your local environment.
 
 # Cleaning Up
 1. Run `terraform destroy` to remove all resources by terraform.
