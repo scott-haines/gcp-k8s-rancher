@@ -4,7 +4,7 @@ resource "google_compute_instance" "rancher-web" {
   tags         = ["rancher-web"]
 
   metadata = {
-    ssh-keys = "${var.bastion_username}:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys = "${var.bastion_username}:${tls_private_key.bastion-key.public_key_openssh}"
   }
 
   boot_disk {
@@ -25,11 +25,11 @@ resource "google_compute_instance" "rancher-web" {
     type        = "ssh"
     user        = var.bastion_username
     agent       = false
-    private_key = file("~/.ssh/id_rsa")
+    private_key = tls_private_key.bastion-key.private_key_pem
     host        = google_compute_instance.rancher-web.network_interface.0.network_ip
 
     bastion_host        = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
-    bastion_private_key = file("~/.ssh/id_rsa")
+    bastion_private_key = tls_private_key.bastion-key.private_key_pem
   }
 
   provisioner "remote-exec" {
@@ -104,11 +104,11 @@ resource "null_resource" "rancher-web-nginx" {
     type        = "ssh"
     user        = var.bastion_username
     agent       = false
-    private_key = file("~/.ssh/id_rsa")
+    private_key = tls_private_key.bastion-key.private_key_pem
     host        = google_compute_instance.rancher-web.network_interface.0.network_ip
 
     bastion_host        = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
-    bastion_private_key = file("~/.ssh/id_rsa")
+    bastion_private_key = tls_private_key.bastion-key.private_key_pem
   }
 
   provisioner "file" {
