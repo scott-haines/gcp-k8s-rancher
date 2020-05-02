@@ -4,9 +4,12 @@
 package main
 
 import (
+	"archive/zip"
 	"flag"
 	"fmt"
+	"io"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,6 +47,9 @@ func main() {
 
 	printStep("Initializing tfvars")
 	failOnError(initializeTFVars())
+
+	printStep("Installing Third-Party Terraform providers")
+	failOnError(installThirdPartyTF())
 
 	printStep("Initializing Terraform")
 	failOnError(initializeTerraform())
@@ -168,6 +174,41 @@ func createServiceAccount() error {
 	return nil
 }
 
+func installThirdPartyTF() error {
+	homeDir, _ := os.UserHomeDir()
+	installDir := homeDir + "/.terraform.d/plugins/"
+	if _, err := os.Stat(fmt.Sprintf("%s/%s", installDir, "terraform-provider-keycloak_v1.18.0_linux_amd64")); err == nil {
+		fmt.Printf("  \033[2mterraform-provider-keycloak_v1.18.0_linux_amd64 already installed\n")
+		return nil
+	}
+
+	if _, err := os.Stat(installDir); os.IsNotExist(err) {
+		fmt.Printf("  \033[2mcreating plugin directory\033[m\n")
+		os.MkdirAll(installDir, os.ModePerm)
+	}
+
+	fileURL := "https://github.com/mrparkers/terraform-provider-keycloak/releases/download/1.18.0/terraform-provider-keycloak_v1.18.0_linux_amd64.zip"
+	localFilePath := fmt.Sprintf("%s%s", installDir, "terraform-provider-keycloak_v1.18.0_linux_amd64.zip")
+
+	fmt.Printf("  \033[2mdownloading %s\033[m\n", fileURL)
+	if err := downloadFile(localFilePath, fileURL); err != nil {
+        return err
+	}
+	
+	fmt.Printf("  \033[2munzipping %s into %s\033[m\n", localFilePath, installDir)
+	_, err := unzip(localFilePath, installDir)
+    if err != nil {
+        return err
+	}
+
+	fmt.Printf("  \033[2mtidying up %s\033[m\n", localFilePath)
+	os.Remove(localFilePath)
+	
+	fmt.Printf("  \033[2minstalled terraform-provider-keycloak_v1.18.0_linux_amd64\033[m\n")
+
+	return nil
+}
+
 func initializeTerraform() error {
 	out, err := run("terraform", "init")
 	if err != nil {
@@ -179,7 +220,7 @@ func initializeTerraform() error {
 
 func initializeTFVars() error {
 	if _, err := os.Stat("terraform.tfvars"); err == nil {
-		fmt.Printf("  \033[2mNot Required - delete terraform.tfvars to force prompts\n")
+		fmt.Printf("  \033[2mNot Required - delete terraform.tfvars to force prompts\033[m\n")
 		return nil
 	}
 
@@ -309,4 +350,79 @@ func generateRandomPassword() string {
 		password += string(p)
 	}
 	return password
+}
+
+func downloadFile(filepath string, url string) error {
+
+    // Get the data
+    resp, err := http.Get(url)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    // Create the file
+    out, err := os.Create(filepath)
+    if err != nil {
+        return err
+    }
+    defer out.Close()
+
+    // Write the body to file
+    _, err = io.Copy(out, resp.Body)
+    return err
+}
+
+func unzip(src string, dest string) ([]string, error) {
+
+    var filenames []string
+
+    r, err := zip.OpenReader(src)
+    if err != nil {
+        return filenames, err
+    }
+    defer r.Close()
+
+    for _, f := range r.File {
+
+        // Store filename/path for returning and using later on
+        fpath := filepath.Join(dest, f.Name)
+
+        // Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
+        if strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+            filenames = append(filenames, fpath)
+
+			if f.FileInfo().IsDir() {
+				// Make Folder
+				os.MkdirAll(fpath, os.ModePerm)
+				continue
+			}
+
+			// Make File
+			if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+				return filenames, err
+			}
+
+			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				return filenames, err
+			}
+
+			rc, err := f.Open()
+			if err != nil {
+				return filenames, err
+			}
+
+			_, err = io.Copy(outFile, rc)
+
+			// Close the file without defer to close before next iteration of loop
+			outFile.Close()
+			rc.Close()
+
+			if err != nil {
+				return filenames, err
+			}
+		}
+    }
+    return filenames, nil
 }
