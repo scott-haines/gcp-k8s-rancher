@@ -36,3 +36,6 @@ ENV PATH=$KS_DIR:$PATH
 RUN mkdir $KS_DIR \
     && curl -L https://storage.googleapis.com/kubernetes-release/release/${KS_VER}/bin/linux/amd64/kubectl -o ${KS_DIR}/kubectl \
     && chmod +x ${KS_DIR}/kubectl
+    
+### Rio ###
+RUN curl -sfL https://get.rio.io | sh -
