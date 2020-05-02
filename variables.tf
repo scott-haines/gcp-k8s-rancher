@@ -58,7 +58,7 @@ variable rancher_web_name {
 }
 
 variable rancher_web_size {
-  default = "g1-small"
+  default = "n1-standard-2" # 2 vCPUs, 7.5 GB memory
 }
 
 variable rancher_web_image {
